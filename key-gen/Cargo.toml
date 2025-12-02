@@ -1,0 +1,14 @@
+[package]
+name = "key-gen"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+blake2b_simd = "1.0"
+ed25519 = "2.2.3"
+ed25519-dalek = "2.2.0"
+parity-scale-codec = "3.7.5"
+pqcrypto-dilithium = "0.5.0"
+pqcrypto-traits = "0.3.5"
+qrc-opensource-rs = "0.3.7"
+rand = "0.8"

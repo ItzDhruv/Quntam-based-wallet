@@ -1,0 +1,15 @@
+| Algorithm | Secret key contains public key? | First 32 bytes equal? |
+| --------- | ------------------------------- | --------------------- |
+| Kyber     |  No                             |  Different           |
+| Dilithium | ✔ Yes                           | ✔ Same at start       |
+
+
+
+| Functionality                                     | Purpose                                         |
+| ------------------------------------------------- | ----------------------------------------------- |
+| Keypair generation                                | Create public + private key                     |
+| Sign message                                      | Produce a digital signature                     |
+| Verify signature                                  | Validate signature against message & public key |
+| SignedMessage format                              | Attach message + signature together             |
+| DetachedSignature format                          | Keep message & signature separate               |
+| Extract original message (only for SignedMessage) | Recover message after verification              |
