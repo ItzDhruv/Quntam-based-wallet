@@ -76,3 +76,8 @@ pub fn demo_signed_message() {
         Err(_) => println!("✘ Verification failed"),
     }
 }
+
+pub fn ed25519_main(){
+    generate_ed25519();
+    demo_signed_message();
+}

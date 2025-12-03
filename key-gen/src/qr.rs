@@ -11,6 +11,7 @@ use pqcrypto_dilithium::dilithium2::{
     SignedMessage as DilithiumSignedMessage,
 };
 
+
 use pqcrypto_traits::sign::PublicKey as _;
 use pqcrypto_traits::sign::SecretKey as _;
 use pqcrypto_traits::sign::SignedMessage as TraitSignedMessage;
@@ -22,16 +23,19 @@ pub struct HybridPublicKey {
     pub compressed_key: [u8; 32], 
 }
 
+/// Hybrid secret key (kept in wallet storage)
 pub struct HybridSecretKey {
     pub dilithium_sk: DilithiumSecretKey,
     pub ed25519_sk: SigningKey,
 }
 
+/// Hybrid signature (sent with transaction)
 pub struct HybridSignature {
     pub dilithium_sm: DilithiumSignedMessage,
     pub ed25519_sig: Signature,
 }
 
+/// Create 32-byte compressed hybrid public key
 pub fn minimize_key(dil_pk: &DilithiumPublicKey, ed_pk: &VerifyingKey) -> [u8; 32] {
     let mut encoded = Vec::new();
     encoded.extend_from_slice(dil_pk.as_bytes());
@@ -42,19 +46,24 @@ pub fn minimize_key(dil_pk: &DilithiumPublicKey, ed_pk: &VerifyingKey) -> [u8; 3
     out
 }
 
+/// Generate Hybrid Keypair (Dilithium + Ed25519)
 pub fn generate_hybrid_keypair() -> (HybridPublicKey, HybridSecretKey) {
     println!();
     println!("----> HYBRID KEYPAIR (Dilithium + Ed25519)");
     println!();
 
+    // Dilithium
     let (dil_pk, dil_sk) = dilithium_keypair();
 
+    // Ed25519
     let seed: [u8; 32] = random();
     let ed_sk = SigningKey::from_bytes(&seed);
     let ed_pk = ed_sk.verifying_key();
 
+    // Compressed wallet public key
     let compressed = minimize_key(&dil_pk, &ed_pk);
 
+    // Print only compressed key
     print!("Hybrid COMPRESSED Public Key: 0x");
     for b in compressed {
         print!("{:02x}", b);
@@ -75,6 +84,7 @@ pub fn generate_hybrid_keypair() -> (HybridPublicKey, HybridSecretKey) {
     (hybrid_pk, hybrid_sk)
 }
 
+/// Sign a message using BOTH Dilithium + Ed25519
 pub fn hybrid_sign(message: &[u8], sk: &HybridSecretKey) -> HybridSignature {
     let dil_sm: DilithiumSignedMessage = dilithium_sign(message, &sk.dilithium_sk);
     let ed_sig: Signature = sk.ed25519_sk.sign(message);
@@ -85,7 +95,9 @@ pub fn hybrid_sign(message: &[u8], sk: &HybridSecretKey) -> HybridSignature {
     }
 }
 
+/// Verify both signatures (Dilithium + Ed25519)
 pub fn hybrid_verify(message: &[u8], sig: &HybridSignature, pk: &HybridPublicKey) -> bool {
+    // Dilithium (recover message)
     let recovered = match dilithium_open(&sig.dilithium_sm, &pk.dilithium_pk) {
         Ok(msg) => msg,
         Err(_) => return false,
@@ -98,9 +110,11 @@ pub fn hybrid_verify(message: &[u8], sig: &HybridSignature, pk: &HybridPublicKey
         return false;
     }
 
+    // Ed25519
     pk.ed25519_pk.verify(message, &sig.ed25519_sig).is_ok()
 }
 
+/// Demo function to show whole process
 pub fn demo_hybrid() {
     println!();
     println!();
@@ -109,6 +123,7 @@ pub fn demo_hybrid() {
 
     let (hybrid_pk, hybrid_sk) = generate_hybrid_keypair();
 
+    // ---- Print ALL RAW KEYS ----
     println!("\n==================== RAW KEY DETAILS ====================");
 
     println!("Dilithium Public Key ({} bytes) print Only First 32 bytes :", hybrid_pk.dilithium_pk.as_bytes().len());
@@ -139,12 +154,14 @@ pub fn demo_hybrid() {
     }
     println!("\n");
 
+    // ---- Print compressed Hybrid public key ----
     println!("Hybrid COMPRESSED Public Key (32 bytes): 0x");
     for b in hybrid_pk.compressed_key {
         print!("{:02x}", b);
     }
     println!("\n");
 
+    // ---- Sign message ----
     let message = b"Post-Quantum Blockchain Ready (Hybrid Wallet)";
     let sig = hybrid_sign(message, &hybrid_sk);
 
@@ -152,7 +169,7 @@ pub fn demo_hybrid() {
 
     println!("Dilithium SignedMessage ({} bytes):", sig.dilithium_sm.as_bytes().len());
     print!("0x");
-    for b in sig.dilithium_sm.as_bytes().iter().take(80) { 
+    for b in sig.dilithium_sm.as_bytes().iter().take(80) { // not printing full because 2KB+
         print!("{:02x}", b);
     }
     println!(" ... (truncated)\n");
@@ -164,6 +181,7 @@ pub fn demo_hybrid() {
     }
     println!("\n");
 
+    // ---- Verify ----
     println!("==================== VERIFICATION ====================\n");
     if hybrid_verify(message, &sig, &hybrid_pk) {
         println!("✔ HYBRID verification successful (Dilithium + Ed25519 both valid)");
@@ -181,4 +199,3 @@ pub fn demo_hybrid() {
     println!("Ed25519 Signature: {} bytes", sig.ed25519_sig.to_bytes().len());
     println!("Hybrid Compressed Address: 32 bytes");
 }
-

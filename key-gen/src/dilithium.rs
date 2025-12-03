@@ -61,3 +61,8 @@ pub fn demo_signed_message() {
 
     println!("Recovered message: {}", String::from_utf8_lossy(&verified));
 }
+
+pub fn dilithium_main(){
+    generate_dilithium();
+    demo_signed_message();
+}

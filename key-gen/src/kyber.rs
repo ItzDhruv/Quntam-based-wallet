@@ -23,7 +23,6 @@ pub fn generate_kyber() {
 
     let secret1 = &mut [0u8; QRC_KYBER_SHAREDSECRET_SIZE];
     let secret2 = &mut [0u8; QRC_KYBER_SHAREDSECRET_SIZE];
-
     let ciphertext = &mut [0u8; QRC_KYBER_CIPHERTEXT_SIZE];
 
     
